@@ -1,5 +1,7 @@
 from graham import *
 from utilites_geo import crossProduct
+from matplotlib import pyplot as plt
+import copy
 import random
 
 
@@ -13,7 +15,6 @@ def direction(p0, p1, p2):
         return 1  # Derecha
     elif cp == 0:
         return 0  # Colineal
-
 
 def findUpperTangent(hull1, hull2, h1r, h2l):
     # hull1 and hull2 are the convex hulls of two sets of points
@@ -71,9 +72,6 @@ def merger(hull1, hull2):
     utia, utib = findUpperTangent(hull1, hull2, h1r, h2l)
     ltia, ltib = findLowerTangent(hull1, hull2, h1r, h2l)
 
-    print(f"upper tangent: {hull1[utia]} - {hull2[utib]}")
-    print(f"lower tangent: {hull1[ltia]} - {hull2[ltib]}")
-
     hull = []
 
     # Append points from upper tangent point on set 1 to lower tangent point on set 1
@@ -97,10 +95,40 @@ def merger(hull1, hull2):
     return hull
 
 
-def plotHull(hull):
+def plotHull(hull, color='b'):
     x = [i[0] for i in hull]
     y = [i[1] for i in hull]
-    plt.plot(x, y, 'y-')
+    fig = plt.plot(x, y, f'{color}-')
+    return fig
+
+def divideAndConquer(points):
+    # points is a list of points
+    # return: the convex hull of the set of points
+    points.sort(key=lambda x: x[0])
+    points1 = points[:len(points) // 2]
+    points2 = points[len(points) // 2:]
+
+    hull1 = graham(points1)
+    hull2 = graham(points2)
+
+    hull = merger(copy.deepcopy(hull1), copy.deepcopy(hull2))
+    hull.append(hull[0])
+
+    fig = plt.figure(figsize=(10, 5))
+    fig.suptitle('Divide and Conquer')
+    subfigs = fig.subplots(1, 2)
+    subfigs[0].plot([i[0] for i in points1], [i[1] for i in points1], 'ro')
+    subfigs[0].plot([i[0] for i in points2], [i[1] for i in points2], 'ro')
+    subfigs[0].plot([i[0] for i in hull1], [i[1] for i in hull1], 'b-')
+    subfigs[0].plot([i[0] for i in hull2], [i[1] for i in hull2], 'b-')
+    subfigs[0].title.set_text('Splited Convex Hulls')
+
+    subfigs[1].plot([i[0] for i in points], [i[1] for i in points], 'ro')
+    subfigs[1].plot([i[0] for i in hull], [i[1] for i in hull], 'b-')
+    subfigs[1].title.set_text('Merged Convex Hull')
+
+    plt.show()
+    return hull
 
 
 def main():
@@ -128,30 +156,17 @@ def main():
     plt.plot(x, y, 'ro')
     plt.show()
 
-
 def main2():
     points = [(4.4761, 1.994), (4.9466, 1.2667), (0.1991, 3.0293), (1.2734, 4.9885), (1.9589, 3.6342), (3.7172, 3.6357),
               (4.0876, 0.2972), (4.304, 2.2281), (3.2383, 3.0908), (3.1682, 3.7495), (0.7345, 4.7487), (3.968, 3.5959),
               (1.2508, 0.1982), (0.1991, 2.256), (0.1991, 1.562), (2.134, 1.562), (3.334, 1.562)]
     # points = [(0, 0), (1, 1), (1, 0), (2, 0), (2, 2), (3, 0)]
-    points.sort(key=lambda x: x[0])
-    points1 = points[:len(points) // 2]
-    points2 = points[len(points) // 2:]
-
-    g1 = graham(points1)
-    g2 = graham(points2)
-
-    hull = merger(g1, g2)
+    hull = divideAndConquer(points)
     hull.append(hull[0])
-    print(hull)
-    plotHull(hull)
-    # plot the points
-    x = [i[0] for i in points]
-    y = [i[1] for i in points]
-    plt.plot(x, y, 'ro')
-    plt.show()
-    # mergero(g2, g1)
+    plt.close()
+
+
 
 
 if __name__ == "__main__":
-    main()
+    main2()
