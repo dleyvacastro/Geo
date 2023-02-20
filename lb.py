@@ -1,5 +1,6 @@
 from random import randint
 import BT as bt
+from utilites_geo import *
 
 class Point:
     def __init__(self, x, y):
@@ -59,9 +60,9 @@ class SweepLine:
 
 
     def handleEventPoint(self, p):
-        U = [i for i in self.Q if i.getUpperPoint() == p]
-        L = [i for i in self.Q if i.getLowerPoint() == p]
-        C = [i for i in self.Q if i.isInSegment(p)]
+        U = [i for i in self.S if i.getUpperPoint() == p]
+        L = [i for i in self.S if i.getLowerPoint() == p]
+        C = [i for i in self.S if i.isInSegment(p)]
 
         if len(list(dict.fromkeys(U+L+C))) > 1:
             self.intersects.append((p, U, L, C))

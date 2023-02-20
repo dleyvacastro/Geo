@@ -16,46 +16,32 @@ def direction(p0, p1, p2):
     elif cp == 0:
         return 0  # Colineal
 
-def findUpperTangent(hull1, hull2, h1r, h2l):
-    # hull1 and hull2 are the convex hulls of two sets of points
-    # h1r is the rightmost point of hull1
-    # h2l is the leftmost point of hull2
-    # return: the upper tangent of the two convex hulls
+def findTangent(hull1, hull2, h1r, h2l, tail):
     h1r = hull1.index(h1r)
     h2l = hull2.index(h2l)
+    if tail == 0:
+        while 1:
+            while direction(hull1[h1r], hull2[h2l], hull2[(h2l + 1) % len(hull2)]) >= 0:
+                h2l = (h2l + 1) % len(hull2)
+            if direction(hull2[h2l], hull1[h1r], hull1[(len(hull1) + h1r - 1) % len(hull1)]) <= 0:
+                while direction(hull2[h2l], hull1[h1r], hull1[(len(hull1) + h1r - 1) % len(hull1)]) <= 0:
+                    h1r = (len(hull1) + h1r - 1) % len(hull1)
+            else:
+                break
 
-    while 1:
-        while direction(hull2[h2l], hull1[h1r], hull1[(h1r + 1) % len(hull1)]) >= 0:
-            h1r = (h1r + 1) % len(hull1)
-        if direction(hull1[h1r], hull2[h2l], hull2[(len(hull2) + h2l - 1) % len(hull2)]) <= 0:
-            while direction(hull1[h1r], hull2[h2l], hull2[(len(hull2) + h2l - 1) % len(hull2)]) <= 0:
-                h2l = (len(hull2) + h2l - 1) % len(hull2)
-        else:
-            break
+        return h1r, h2l
 
-    return h1r, h2l
+    elif tail == 1:
+        while 1:
+            while direction(hull2[h2l], hull1[h1r], hull1[(h1r + 1) % len(hull1)]) >= 0:
+                h1r = (h1r + 1) % len(hull1)
+            if direction(hull1[h1r], hull2[h2l], hull2[(len(hull2) + h2l - 1) % len(hull2)]) <= 0:
+                while direction(hull1[h1r], hull2[h2l], hull2[(len(hull2) + h2l - 1) % len(hull2)]) <= 0:
+                    h2l = (len(hull2) + h2l - 1) % len(hull2)
+            else:
+                break
 
-
-def findLowerTangent(hull1, hull2, h1r, h2l):
-    # hull1 and hull2 are the convex hulls of two sets of points
-    # h1r is the rightmost point of hull1
-    # h2l is the leftmost point of hull2
-    # return: the lower tangent of the two convex hulls
-    h1r = hull1.index(h1r)
-    h2l = hull2.index(h2l)
-
-    while 1:
-        while direction(hull1[h1r], hull2[h2l], hull2[(h2l + 1) % len(hull2)]) >= 0:
-            h2l = (h2l + 1) % len(hull2)
-        if direction(hull2[h2l], hull1[h1r], hull1[(len(hull1) + h1r - 1) % len(hull1)]) <= 0:
-            while direction(hull2[h2l], hull1[h1r], hull1[(len(hull1) + h1r - 1) % len(hull1)]) <= 0:
-                h1r = (len(hull1) + h1r - 1) % len(hull1)
-        else:
-            break
-
-    return h1r, h2l
-
-
+        return h1r, h2l
 def merger(hull1, hull2):
     # hull1 and hull2 are the convex hulls of two sets of points
     # return: the convex hull of the union of the two sets of points
@@ -69,8 +55,11 @@ def merger(hull1, hull2):
     h2l = min(hull2, key=lambda x: x[0])  # Leftmost point of hull2
 
     # tans
-    utia, utib = findUpperTangent(hull1, hull2, h1r, h2l)
-    ltia, ltib = findLowerTangent(hull1, hull2, h1r, h2l)
+    # utia, utib = findUpperTangent(hull1, hull2, h1r, h2l)
+    # ltia, ltib = findLowerTangent(hull1, hull2, h1r, h2l)
+
+    utia, utib = findTangent(hull1, hull2, h1r, h2l, 1)
+    ltia, ltib = findTangent(hull1, hull2, h1r, h2l, 0)
 
     hull = []
 
@@ -161,8 +150,9 @@ def main2():
               (4.0876, 0.2972), (4.304, 2.2281), (3.2383, 3.0908), (3.1682, 3.7495), (0.7345, 4.7487), (3.968, 3.5959),
               (1.2508, 0.1982), (0.1991, 2.256), (0.1991, 1.562), (2.134, 1.562), (3.334, 1.562)]
     # points = [(0, 0), (1, 1), (1, 0), (2, 0), (2, 2), (3, 0)]
+    # points = [(random.randint(0,100), random.randint(0,100)) for _ in range(0,100)]
     hull = divideAndConquer(points)
-    hull.append(hull[0])
+    print(hull)
     plt.close()
 
 
