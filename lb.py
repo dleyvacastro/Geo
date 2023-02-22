@@ -26,7 +26,6 @@ class Segment:
     def __init__(self, p0 : Point, p1 : Point):
         self.p0 = p0
         self.p1 = p1
-        self.ysl = None
 
     def getUpperPoint(self):
         if self.p0 > self.p1:
@@ -60,7 +59,7 @@ class SweepLine:
             Q.append((i.getLowerPoint(), i))
 
         Q.sort(key=lambda x: x[0])
-        self.T = bt.Node(Q[0][1])
+        self.T = bt.Node(Q[0][1]) # ¿Que se inserta aca?
         while Q:
             p = Q.pop(0)
             self.handleEventPoint(p)
@@ -72,9 +71,9 @@ class SweepLine:
         L = [i for i in self.S if i.getLowerPoint() == p[0]]
         C = [i for i in self.S if i.isInSegment(p[1])]
 
-        # 2.
+        # 2. ¿Aca se inicializan U, L y C? ¿Con el arbol o sin el?
         sorted_array = bt.inOrder(self.T)
-        a = [i for i in sorted_array if i.getLowerPoint() == p[0] or i.getUpperPoint == p[0] or i.isInSegment(p[1])] # mausqui herramienta misteriosa que nos ayudara mas tarde, presumiblemente, en caso contrario basura
+        a = [i for i in sorted_array if i.getLowerPoint() == p[0] or i.getUpperPoint == p[0] or i.isInSegment(p[1])]
 
         #3
         if len(set(U+L+C)) > 1:
@@ -94,7 +93,7 @@ class SweepLine:
         # 7
         # TODO: ORGANIZAR ARRAY
         self.T = bt.BBT(sorted_array)
-        sorted_array = bt.inOrder(self.T) # mi dios me lo bendiga
+        sorted_array = bt.inOrder(self.T)
         # self.T = bt.complete(self.T, sorted_array)
 
         # 8
