@@ -26,6 +26,7 @@ class Segment:
     def __init__(self, p0 : Point, p1 : Point):
         self.p0 = p0
         self.p1 = p1
+        self.ysl = None
 
     def getUpperPoint(self):
         if self.p0 > self.p1:
@@ -37,38 +38,76 @@ class Segment:
             return self.p0
         return self.p1
 
-    def isInSegment(self, p : Point) -> bool:
-        return self.p0.x <= p.x <= self.p1.x and self.p0.y <= p.y <= self.p1.y
+    def isInSegment(self, p) -> bool:
+        cross_res = cross(self.p0, self.p1, p.p0, p.p1)
+        return  cross_res[0] and cross_res[1] not in [p.getUpperPoint(), p.getLowerPoint()]
 
-    def __lt__(self, s) -> bool:
-        return self.getUpperPoint() < s.getUpperPoint()
+    def __lt__(self, s):
+        if self.ysl is None:
+            raise "puto"
 
-    def __gt__(self, s) -> bool:
-        return self.getUpperPoint() > s.getUpperPoint()
 
 class SweepLine:
     def __init__(self, S):
         self.S = S
-        self.T = bt.Node(None)
+        self.T = None
         self.intersects = []
 
     def findIntersections(self):
-        Q = [i for i in self.S]
-        while not Q:
+        Q = []
+        for i in self.S:
+            Q.append((i.getUpperPoint(), i))
+            Q.append((i.getLowerPoint(), i))
+
+        Q.sort(key=lambda x: x[0])
+        self.T = bt.Node(Q[0][1])
+        while Q:
             p = Q.pop(0)
             self.handleEventPoint(p)
 
 
     def handleEventPoint(self, p):
-        U = [i for i in self.S if i.getUpperPoint() == p]
-        L = [i for i in self.S if i.getLowerPoint() == p]
-        C = [i for i in self.S if i.isInSegment(p)]
+        # 1.
+        U = [i for i in self.S if i.getUpperPoint() == p[0]]
+        L = [i for i in self.S if i.getLowerPoint() == p[0]]
+        C = [i for i in self.S if i.isInSegment(p[1])]
 
-        if len(list(dict.fromkeys(U+L+C))) > 1:
+        # 2.
+        sorted_array = bt.inOrder(self.T)
+        a = [i for i in sorted_array if i.getLowerPoint() == p[0] or i.getUpperPoint == p[0] or i.isInSegment(p[1])] # mausqui herramienta misteriosa que nos ayudara mas tarde, presumiblemente, en caso contrario basura
+
+        #3
+        if len(set(U+L+C)) > 1:
+            #4
             self.intersects.append((p, U, L, C))
 
+        #5
+        for i in sorted_array:
+            if i in L+C:
+                sorted_array.remove(i)
+
+        # 6
+        for i in sorted_array:
+            if i in U + C:
+                sorted_array.append(i)
+
+        # 7
+        # TODO: ORGANIZAR ARRAY
+        self.T = bt.BBT(sorted_array)
+        sorted_array = bt.inOrder(self.T) # mi dios me lo bendiga
+        # self.T = bt.complete(self.T, sorted_array)
+
+        # 8
+        if len(U+C) == 0:
+            pti = sorted_array.find(p[1])
+            pl = sorted_array[pti-1]
+            pr = sorted_array[pti+1]
+
+        # dejo constancia en este comentario de que nos queremos morir
 
 
+    def findNewEvent(self, pl, pr, p):
+        pass
 
 def comparisson_rule(p0, p1) -> bool:
     x0, y0 = p0
