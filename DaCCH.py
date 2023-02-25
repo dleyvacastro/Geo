@@ -150,7 +150,7 @@ def main2():
               (4.0876, 0.2972), (4.304, 2.2281), (3.2383, 3.0908), (3.1682, 3.7495), (0.7345, 4.7487), (3.968, 3.5959),
               (1.2508, 0.1982), (0.1991, 2.256), (0.1991, 1.562), (2.134, 1.562), (3.334, 1.562)]
     # points = [(0, 0), (1, 1), (1, 0), (2, 0), (2, 2), (3, 0)]
-    # points = [(random.randint(0,100), random.randint(0,100)) for _ in range(0,100)]
+    # points = [(random.randint(0,10), random.randint(0,10)) for _ in range(0,10)]
     hull = divideAndConquer(points)
     print(hull)
     plt.close()
