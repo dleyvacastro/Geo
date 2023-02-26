@@ -116,6 +116,13 @@ def divideAndConquer(points):
     subfigs[1].plot([i[0] for i in hull], [i[1] for i in hull], 'b-')
     subfigs[1].title.set_text('Merged Convex Hull')
 
+    for i in range(2):
+        subfigs[i].grid(True)
+        subfigs[i].set_xlabel('x')
+        subfigs[i].set_ylabel('y')
+        subfigs[i].set_xlim(0, 5)
+        subfigs[i].set_ylim(0, 5)
+
     plt.show()
     return hull
 
