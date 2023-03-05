@@ -2,16 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utilites_geo import *
 from BT import *
-import random
-
-
+from random import randint, uniform
+import pprint
 class Point:
-    def __init__(self, x, y):
+    def __init__(self, x: float, y: float):
+        if not isinstance(x, (int, float)):
+            raise TypeError('x must be a number')
         self.x = x
         self.y = y
 
     def __lt__(self, p) -> bool:
-        # comparison rule for points
         return (self.y > p.y) or (self.y == p.y and self.x < p.x)
 
     def __gt__(self, p) -> bool:
@@ -21,10 +21,10 @@ class Point:
         return self.x == p.x and self.y == p.y
 
     def __str__(self):
-        return f"({self.x}, {self.y})"
+        return f"P({self.x}, {self.y})"
 
     def __repr__(self):
-        return f"({self.x}, {self.y})"
+        return f"P({self.x}, {self.y})"
 
     def toTuple(self):
         return (self.x, self.y)
@@ -39,17 +39,19 @@ class Segment:
         self.start = start
         self.end = end
 
-    def add2plot(self, color=''):
-        plt.plot([self.start.x, self.end.x], [
+    def toCoords(self):
+        return [[self.start.x, self.end.x], [self.start.y, self.end.y]]
+
+    def add2plot(self, color='', plter=plt):
+        plter.plot([self.start.x, self.end.x], [
             self.start.y, self.end.y], f'{color}-', label=self.label)
 
-    def toCoordsArray(self):
-        return [[self.start.x, self.end.x],[self.start.y, self.end.y]]
-
     def sp_intersection_point(self, y):
+        if self.start.y == self.end.y:
+            return self.end
         alpha = (y - self.end.y) / (self.start.y - self.end.y)
         x = alpha * self.start.x + (1 - alpha) * self.end.x
-        return Point(round(x, 2), round(y, 2))
+        return Point(round(x, 5), round(y, 5))
 
     def __lt__(self, s):
         if any([self.ysl is None, s.ysl is None, self.ysl != s.ysl]):
@@ -58,6 +60,12 @@ class Segment:
 
     def __gt__(self, s):
         return not self.__lt__(s)
+
+    def __eq__(self, s):
+        return self.start == s.start and self.end == s.end
+
+    def __iter__(self):
+        return iter([self.start, self.end])
 
     def __repr__(self):
         return f'S({self.start} - {self.end})'
@@ -68,27 +76,32 @@ class Segment:
 
 class SweepLine:
     def __init__(self, S):
-        self.S = S  # list of segments
-        self.T = None  # binary search tree
-        self.U = []  # Segments that contains p as a upper endpoint
-        self.L = []  # Segments that contains p as a lower endpoint
-        self.C = []  # Segments that contains p as a inner point
-        self.Q = []  # Event queue
-        self.I = []  # Intersection points
-        self.y = None  # Sweep line height
-        self.TaoSortArr = []  # Array of segments sorted by sweep line height
+        self.S = S # list of segments
+        self.T = None # binary search tree
+        self.U = [] # Segments that contains p as an upper endpoint
+        self.L = [] # Segments that contains p as a lower endpoint
+        self.C = [] # Segments that contains p as an inner point
+        self.Q = [] # Event queue
+        self.I = [] # Intersection points
+        self.y = None # Sweep line height
+        self.TaoSortArr = [] # Array of segments sorted by sweep line height
 
-        self.frames = []
+        self.warned = False
 
-    # Plotter functions
-    def plotState(self):
+    # Plotter Functions
+    def plotState(self, plot=True):
+        if not plot:
+            return
         if len(self.S) > 5:
-            print("Too many segments to plot")
+            if not self.warned:
+                print("Too many segments to plot")
+            self.warned = True
             return
         if self.y is None:
             return
         maxxs = max([i.start.x for i in self.S] + [i.end.x for i in self.S])
-        plt.plot([0, maxxs], [self.y, self.y], 'k--', label="Sweep line")
+        minxs = min([i.start.x for i in self.S] + [i.end.x for i in self.S])
+        plt.plot([minxs, maxxs], [self.y, self.y], 'k--', label="Sweep line")
         for i in self.S:
             if i.start.y >= self.y >= i.end.y:
                 i.add2plot('b')
@@ -98,7 +111,7 @@ class SweepLine:
         plt.grid()
         plt.show()
 
-    # Sweep line functions utilities
+    # sweep line functions utilities
     def updateQSP(self):
         # Updates all sweep line height in Q segments
         for i in self.Q:
@@ -111,24 +124,25 @@ class SweepLine:
 
     def updateSP(self):
         # Updates all sweep line height in Q and tree segments
+        self.y -= 0.01
         self.updateQSP()
         self.updateTreeArrSP()
 
     # Algorithm functions
     def findNewEvent(self, sl, sr, p):
-        intersection = cross(sl.start.toTuple(), sl.end.toTuple(), sr.start.toTuple(), sr.end.toTuple())
 
+        intersection = cross(sl.start.toTuple(), sl.end.toTuple(), sr.start.toTuple(), sr.end.toTuple())
         if not intersection[0]:
             return
         intersection = intersection[1]
-
         intersection_point = Point(intersection[0], intersection[1])
-
         if p[0] < intersection_point != p[0] and intersection_point not in [i[0] for i in self.Q]:
             self.Q.append((intersection_point, sl, 'c'))
             self.Q.sort(key=lambda x: x[0])
 
+
     def handleEventPoint(self, p):
+
         self.U = [i[1] for i in self.Q if i[2] == 'u' and i[0] == p[0]]
         self.L = [i[1] for i in self.Q if i[2] == 'l' and i[0] == p[0]]
 
@@ -156,7 +170,6 @@ class SweepLine:
             if i not in self.TaoSortArr:
                 self.TaoSortArr.append(i)
 
-        self.y -= 0.001
         self.updateSP()
 
         if (not self.TaoSortArr and not self.Q) or not self.TaoSortArr:
@@ -171,7 +184,7 @@ class SweepLine:
         self.TaoSortArr = inOrder(self.T)
 
         if len(self.TaoSortArr) > 1:
-            if not self.U + self.C:
+            if len(self.U + self.C) == 0:
                 indx = 0
                 xs = [p[0].x]
                 for i in self.TaoSortArr:
@@ -181,88 +194,96 @@ class SweepLine:
                     indx += 1
                 sr = self.TaoSortArr[indx]
                 sl = self.TaoSortArr[indx - 1]
-
                 self.findNewEvent(sl, sr, p)
             else:
                 U_C = self.U + self.C
                 indx = 0
-                sp = None
-                spp = None
-                sl = None
-                sr = None
-
+                sp = sp = spp = sl = sr = None
                 while 1:
                     if self.TaoSortArr[indx] in U_C:
-                        sp = self.TaoSortArr[indx]
+                        s_prime = self.TaoSortArr[indx]
+                        if indx == 0:
+                            break
                         sl = self.TaoSortArr[indx - 1]
                         break
                     indx += 1
-
-                self.findNewEvent(sl, sp, p)
+                if indx != 0:
+                    self.findNewEvent(sl, s_prime, p)
                 indx = -1
 
                 while 1:
                     if self.TaoSortArr[indx] in U_C:
-                        spp = self.TaoSortArr[indx]
+                        s_prime_prime = self.TaoSortArr[indx]
+                        if indx == -1:
+                            break
                         sr = self.TaoSortArr[indx + 1]
                         break
                     indx -= 1
+                if indx != -1:
+                    self.findNewEvent(s_prime_prime, sr, p)
 
-                self.findNewEvent(spp, sr, p)
-    def findIntersections(self):
+        pass
+
+    def findIntersections(self, plot=True):
         Q_U = [(i.start, i, 'u') for i in self.S]
         Q_L = [(i.end, i, 'l') for i in self.S]
         self.Q.extend(Q_U + Q_L)
         self.Q.sort(key=lambda x: x[0])
         self.T = Node(self.Q[0][1])
+
         while self.Q:
-            self.plotState()
+            self.plotState(plot)
             self.y = self.Q[0][0].y
             self.updateSP()
 
             p = self.Q.pop(0)
             self.handleEventPoint(p)
 
-        Ip = []
-
-        for i in self.I:
-            Ip.append(i[0][0])
-
-        return Ip
+        return self.I
 
 
-def segmentGenerator(n, limit):
-    return [Segment(Point(round(random.uniform(1, limit), 2), round(random.uniform(1, limit), 2)),
-                    Point(round(random.uniform(1, limit), 2), round(random.uniform(1, limit), 2))) for i in
-            range(n)]
-
+def segmentGenerator(n, limit, type=1, rounded=2):
+    if type:
+        return [
+            Segment(
+                *[Point(*[round(uniform(-limit,limit), rounded) for _ in range(2)]) for _ in range(2)]
+            )
+            for _ in range(n)
+        ]
+    return [
+        Segment(
+            *[Point(*[round(randint(-limit, limit), rounded) for _ in range(2)]) for _ in range(2)]
+        )
+        for _ in range(n)
+    ]
 
 def main():
-    S = segmentGenerator(5, 50)
+    S = [
+        Segment(Point(1,0), Point(1,10)),
+        Segment(Point(0,1), Point(10,1)),
+        Segment(Point(9,0), Point(9,10)),
+        Segment(Point(0,9), Point(10,9))
+    ]
+
     for i in S:
         i.add2plot()
 
     plt.show()
 
     s = SweepLine(S)
-    I = s.findIntersections()
-    for i in I:
+    I = s.findIntersections(plot=0)
+    intersectionPoints = [i[0][0] for i in I]
+    for i in S:
+        i.add2plot('b')
+    for i in intersectionPoints:
         plt.plot(i.x, i.y, 'ro')
 
-    for i in S:
-        i.add2plot()
-
+    plt.title("Intersecciones")
+    plt.grid(1)
     plt.show()
-
-def main2():
-    a = Segment(Point(0, 0), Point(10, 10), 'A')
-    b = Segment(Point(0, 10), Point(10, 0), 'B')
-
-    a.add2plot()
-    b.add2plot()
-
-    plt.legend()
-    plt.show()
+    print(f"Intersecciones encontradas: {len(I)}")
+    for i in I:
+        pprint.pprint(i[0][0])
 
 
 if __name__ == '__main__':
