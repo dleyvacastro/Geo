@@ -2,18 +2,26 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 from IPython import display
 import matplotlib.pyplot as plt
+import gif
 
 # f = (2,5)
 # a, b = f
-lim = 25
-points = [np.random.randint(-lim + 1, lim, 2) for i in range(7)]
+lim = 10
+# points = [np.random.randint(-lim + 1, lim, 2) for i in range(10)]
+points = [
+    (-9,8),
+    (9,8),
+    ]
 f = lambda x, a, b, c: (x ** 2 - 2 * a * x + a ** 2 + b ** 2 - c ** 2) / (2 * b - 2 * c)
 
 
-def beachLinePlotter(c, points):
+@gif.frame
+def beachLineP(c, points):
     # remove all points bellow c
 
     points = [p for p in points if p[1] > c]
+    if len(points) == 0:
+        return
 
     x = {i: [] for i in np.linspace(-lim, lim, 100).tolist()}
 
@@ -29,25 +37,18 @@ def beachLinePlotter(c, points):
 
     y = [min(x[i]) for i in x]
     x = np.linspace(-lim, lim, 100).tolist()
+    # return y
     plt.plot(x, y)
     plt.plot(x, np.ones(len(x)) * c, 'r')
     plt.grid("on")
     # regular lim axis
     plt.xlim(-lim, lim)
     plt.ylim(-lim, lim)
-    plt.show()
 
 
-beachLinePlotter(10, points)
-beachLinePlotter(0, points)
-beachLinePlotter(-10, points)
-beachLinePlotter(-lim, points)
+frames = []
+for i in np.linspace(-lim, lim, 100):
+    frame = beachLineP(i * -1, points)
+    frames.append(frame)
 
-# x = np.linspace(-10, 10, 1)
-# y = f(x)
-#
-# plt.plot(x, y)
-# plt.plot(a, b, 'ro')
-# plt.plot(x, np.ones(len(x))*c, 'r')
-# plt.grid("on")
-# plt.show()
+gif.save(frames, "beachLine.gif", duration=100)
