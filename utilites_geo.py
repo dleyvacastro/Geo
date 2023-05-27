@@ -28,7 +28,8 @@ def direction(p0, p1, p2):
     elif cp == 0:
         return 1
 
-def cross(p0,p1,p2,p3):
+
+def cross(p0, p1, p2, p3):
     # Function that checks if two segments cross each other
     # p0, p1, p2, p3 are the points of the segments
     # p0 and p1 are the points of the first segment
@@ -46,20 +47,22 @@ def cross(p0,p1,p2,p3):
     x2, y2 = p2
     x3, y3 = p3
 
-    cp1 = crossProduct(p2,p3,p0)
-    cp2 = crossProduct(p2,p3,p1)
-    cp3 = crossProduct(p0,p1,p2)
-    cp4 = crossProduct(p0,p1,p3)
+    cp1 = crossProduct(p2, p3, p0)
+    cp2 = crossProduct(p2, p3, p1)
+    cp3 = crossProduct(p0, p1, p2)
+    cp4 = crossProduct(p0, p1, p3)
     crossed = False
 
+    # Conditions to check if the segments cross each other
     conditions = [
-        cp1*cp2 < 0 and cp3*cp4 <0,
-        cp1 == 0 and min(x2,x3) <= x0 <= max(x2,x3) and min(y2,y3) <= y0 <= max(y2,y3),
-        cp2 == 0 and min(x2,x3) <= x1 <= max(x2,x3) and min(y2,y3) <= y1 <= max(y2,y3),
-        cp3 == 0 and min(x0,x1) <= x2 <= max(x0,x1) and min(y0,y1) <= y2 <= max(y0,y1),
-        cp4 == 0 and min(x0,x1) <= x3 <= max(x0,x1) and min(y0,y1) <= y3 <= max(y0,y1)
+        cp1 * cp2 < 0 and cp3 * cp4 < 0,
+        cp1 == 0 and min(x2, x3) <= x0 <= max(x2, x3) and min(y2, y3) <= y0 <= max(y2, y3),
+        cp2 == 0 and min(x2, x3) <= x1 <= max(x2, x3) and min(y2, y3) <= y1 <= max(y2, y3),
+        cp3 == 0 and min(x0, x1) <= x2 <= max(x0, x1) and min(y0, y1) <= y2 <= max(y0, y1),
+        cp4 == 0 and min(x0, x1) <= x3 <= max(x0, x1) and min(y0, y1) <= y3 <= max(y0, y1)
     ]
 
+    # Conditions to check if the segments cross each other in an interval
     cossedInterval = [
         cp1 * cp2 == 0, cp3 * cp4 == 0,
         min(x0, x1) <= max(x2, x3),
@@ -72,23 +75,25 @@ def cross(p0,p1,p2,p3):
         crossed = True
         if all(cossedInterval):
             if (max(x2, x3) <= max(x0, x1) or (max(y2, y3) <= max(y0, y1))) and all([cp1 * cp2 == 0, cp3 * cp4 == 0]):
-                return crossed, (p2,p3)
-            if min(p1,p2) == max(p1,p2):
+                if min(p2, p3) == max(p0, p1):
+                    return crossed, max(p0, p1)
+                return crossed, (p2, p3)
+
+            if min(p1, p2) == max(p1, p2):
                 return crossed, p1
 
-            return crossed, (min(p1,p2), max(p1,p2))
+            return crossed, (min(p1, p2), max(p1, p2))
 
         # get the intersection point using matrix
         A = np.matrix([
-            [x2-x3, x1-x0],
-            [y2-y3, y1-y0]
+            [x2 - x3, x1 - x0],
+            [y2 - y3, y1 - y0]
         ])
-
 
         # get the inverse of the matrix
         Ainv = np.linalg.inv(A)
 
-        r = Ainv*np.matrix([[x1-x3],[y1-y3]])
+        r = Ainv * np.matrix([[x1 - x3], [y1 - y3]])
 
         pcx = r[1][0] * p0[0] + (1 - r[1][0]) * p1[0]
         pcy = r[1][0] * p0[1] + (1 - r[1][0]) * p1[1]

@@ -133,6 +133,7 @@ def main():
     insertBST(b, Node(6))
 
     a = inOrder(b)
+    print(a)
     c = BBT(a)
     c.display()
 
@@ -141,4 +142,9 @@ def main():
     print(inOrder(c))
 
 if __name__ == "__main__":
-    main()
+    # main()
+    a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    T = BBT(a)
+    complete(T, a)
+    inOrder(T)
+    T.display()

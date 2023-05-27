@@ -37,28 +37,29 @@ class Parabola:
         self.x = np.linspace(-self.lim, self.lim, 100)
         self.y = f(self.x, self.a, self.b, self.c)
         self.f = lambda x: (x ** 2 - 2 * self.a * x + self.a ** 2 + self.b ** 2 - self.c ** 2) / (
-                    2 * self.b - 2 * self.c)
+                2 * self.b - 2 * self.c)
 
     def plot(self, color='b'):
         plt.plot(self.x, self.y, color, alpha=0.5)
 
+
 class Beachline:
     def __init__(self):
         self.beachline = [() for i in range(len(np.linspace(-lim, lim, 100)))]
+        self.linspace = np.linspace(-lim, lim, 100)
 
     def detectIntersections(self):
-        index = []
         intersections = []
-        for i in range(len(self.beachline)-1):
+        vertices = {}
+        for i in range(len(self.beachline) - 1):
+            pair = [self.beachline[i][1], self.beachline[i + 1][1]]
             if self.beachline[i][1] != self.beachline[i + 1][1]:
-                index.append(i)
-                intersections.append((self.beachline[i][0]+self.beachline[i + 1][0])/2)
+                point = (self.linspace[i], (self.beachline[i][0] + self.beachline[i + 1][0]) / 2)
+                intersections.append(point)
+                # if pair not in vertices.keys() and point[1] < lim:
+                #     vertices[pair] = point
 
-        return index, intersections
-
-
-
-
+        return intersections, vertices
 
 
 class Voronoi:
@@ -70,10 +71,12 @@ class Voronoi:
         self.nonActive = []
         self.currBeachLine = np.inf * np.ones(len(self.linspace))
 
+        self.intersections = []
+        self.vorVertex = []
 
     @gif.frame
     def beachLineP(self, c):
-        print(len(self.currBeachLine))
+        print(len(self.intersections))
         self.currBeachLine2 = Beachline()
         plt.grid("on")
         # regular lim axis
@@ -89,10 +92,10 @@ class Voronoi:
             return
 
         for i in active:
-            
+
             par = Parabola(i, c, lim)
             isactive = False  # suppose it is not active
-            par.plot('k--')
+            # par.plot('k--')
             for j in range(len(par.y)):
                 if par.y[j] < self.currBeachLine[j]:
                     self.currBeachLine[j] = par.y[j]
@@ -102,47 +105,19 @@ class Voronoi:
             if not isactive:
                 self.nonActive.append(i)
 
-        index, intersections = self.currBeachLine2.detectIntersections()
-        xi = []
-        tmp = self.linspace.tolist()
-        for i in index:
-            xi.append(tmp[i])
 
-        plt.plot(xi, intersections, 'go')
+
+        intersections, vertices = self.currBeachLine2.detectIntersections()
+        self.intersections.extend(intersections)
+        plt.plot([i[0] for i in self.intersections], [i[1] for i in self.intersections], 'g.')
+        # xi = []
+        # tmp = self.linspace.tolist()
+        # for i in index:
+        #     xi.append(tmp[i])
+        #
+        # plt.plot(xi, intersections, 'go')
 
         plt.plot(self.linspace, self.currBeachLine, 'b')
-
-    def beachLine(self, c):
-        # remove all points bellow c
-        print(len(self.currBeachLine))
-        plt.plot([i[0] for i in self.points], [i[1] for i in self.points], 'ok')
-        points = [p for p in self.points if p[1] > c and p not in self.nonActive]
-        if len(points) == 0:
-            return
-
-        x = {i: [] for i in np.linspace(-lim, lim, 1000).tolist()}
-
-        for p in points:
-            a, b = p
-            plt.plot(p[0], p[1], 'ro')
-            xtmp = np.linspace(a - 7, a + 7, 1000)
-            ytmp = f(xtmp, a, b, c)
-            if f(a, a, b, c) > max(self.currBeachLine):
-                self.nonActive.append(p)
-            # light gray plot
-            plt.plot(xtmp, ytmp, 'k--', alpha=0.2)
-            for i in x:
-                x[i].append(f(i, a, b, c))
-
-        y = [min(x[i]) for i in x]
-        x = np.linspace(-lim, lim, 1000).tolist()
-        self.currBeachLine = y
-        plt.plot(x, y)
-        plt.plot(x, np.ones(len(x)) * c, 'r')
-        plt.grid("on")
-        # regular lim axis
-        plt.xlim(-lim, lim)
-        plt.ylim(-lim, lim)
 
     def animate(self):
         frames = []
@@ -158,3 +133,6 @@ class Voronoi:
 # beachLineP(0, points)
 vor = Voronoi(points, lim)
 vor.animate()
+# vor = Voronoi(points, lim)
+# vor.beachLineP(-5)
+# plt.show()

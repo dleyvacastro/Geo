@@ -14,7 +14,13 @@ class Point:
     def __lt__(self, p) -> bool:
         return (self.y > p.y) or (self.y == p.y and self.x < p.x)
 
+    def __le__(self, p) -> bool:
+        return self.__lt__(p) or self.__eq__(p)
+
     def __gt__(self, p) -> bool:
+        return not self.__le__(p)
+
+    def __ge__(self, p) -> bool:
         return not self.__lt__(p)
 
     def __eq__(self, p) -> bool:
@@ -222,7 +228,6 @@ class SweepLine:
                 if indx != -1:
                     self.findNewEvent(s_prime_prime, sr, p)
 
-        pass
 
     def findIntersections(self, plot=True):
         Q_U = [(i.start, i, 'u') for i in self.S]
@@ -258,20 +263,25 @@ def segmentGenerator(n, limit, type=1, rounded=2):
     ]
 
 def main():
-    S = [
-        Segment(Point(1,0), Point(1,10)),
-        Segment(Point(0,1), Point(10,1)),
-        Segment(Point(9,0), Point(9,10)),
-        Segment(Point(0,9), Point(10,9))
-    ]
+    # S = [
+    #     Segment(Point(1,0), Point(1,10)),
+    #     Segment(Point(0,1), Point(10,1)),
+    #     Segment(Point(9,0), Point(9,10)),
+    #     Segment(Point(0,9), Point(10,9))
+    # ]
 
+    S = [
+        Segment(Point(-10, 5), Point(10, 5)),
+        Segment(Point(-10, 0), Point(-9, 10)),
+        Segment(Point(-9, 0), Point(-8, 10)),
+    ]
     for i in S:
         i.add2plot()
 
     plt.show()
 
     s = SweepLine(S)
-    I = s.findIntersections(plot=0)
+    I = s.findIntersections(plot=1)
     intersectionPoints = [i[0][0] for i in I]
     for i in S:
         i.add2plot('b')
